@@ -28,15 +28,17 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+# Должно быть в разделе [project] как массив строк:
+dependencies = [
+    "Flask>=2.0.0",
+    "requests>=2.25.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/slpuk/easyhttp-python"
 Documentation = "https://github.com/slpuk/easyhttp-python#readme"
 Repository = "https://github.com/slpuk/easyhttp-python"
 "Issue Tracker" = "https://github.com/slpuk/easyhttp-python/issues"
-
-[project.dependencies]
-Flask = ">=2.0.0"
-requests = ">=2.25.0"
 
 [project.optional-dependencies]
 dev = [
