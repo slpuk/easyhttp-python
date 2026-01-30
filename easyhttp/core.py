@@ -30,8 +30,8 @@ class EasyHTTP():
         self.callbacks = {
             'on_get': None,
             'on_data_response': None,
-            'on_ping': None
-            #'on_pull': None
+            'on_ping': None,
+            'on_pull': None
         }
         self.devices = {}
         self.app = Flask(__name__)
@@ -45,9 +45,9 @@ class EasyHTTP():
         PING_OK = auto()
         GET = auto()
         DATA_RESPONSE = auto()
-        #PULL = auto() 
-        #PULL_CONFIRM = auto()
-        #PULL_ERROR = auto()
+        PULL = auto() 
+        PULL_CONFIRM = auto()
+        PULL_ERROR = auto()
 
     def _load_config(self):
         try:
@@ -67,7 +67,7 @@ class EasyHTTP():
             config = {
                 'device_id': self.id,
                 'port': self.port,
-                'version': '0.1.0'
+                'version': '0.2.0'
             }
             
             with open(self.config_file, 'w') as f:
@@ -146,7 +146,7 @@ class EasyHTTP():
             self.devices[sender_id] = {
                 'ip': request.remote_addr,
                 'port': header.get('port', self.port),
-                'last_seen': time.time()
+                'last_seen': int(time.time())
             }
 
         if command_type == self.commands.PING.value:
@@ -179,6 +179,37 @@ class EasyHTTP():
                         "data": response_data
                     })
             return jsonify({"status": "get_received"})
+
+        elif command_type == self.commands.PULL.value:
+            if not self.callbacks['on_pull']:
+                return jsonify({
+                    "type": self.commands.PULL_ERROR.value,
+                    "error": "PULL callback not registered"
+                }), 400
+            else:
+                success = self.callbacks['on_pull'](
+                    sender_id=sender_id,
+                    data=data.get('data'),
+                    timestamp=header.get('timestamp')
+                )
+                if success:
+                    return jsonify({
+                        "type": self.commands.PULL_CONFIRM.value,
+                        "header": {
+                            "sender_id": self.id,
+                            "recipient_id": sender_id,
+                            "timestamp": int(time.time())
+                        }
+                    })
+                else:
+                    return jsonify({
+                        "type": self.commands.PULL_ERROR.value,
+                        "header": {
+                            "sender_id": self.id,
+                            "recipient_id": sender_id,
+                            "timestamp": int(time.time())
+                        }
+                    })
 
         elif command_type == self.commands.DATA_RESPONSE.value:
             if self.callbacks['on_data_response']:
@@ -237,4 +268,18 @@ class EasyHTTP():
     def get(self, device_id, query=None):
         response = self.send(device_id, self.commands.GET, query)
         return response
+
+    def pull(self, device_id, data=None):
+        if data is not None and not isinstance(data, (dict, list, str)):
+            raise TypeError("Data must be JSON-serializable (dict, list, str)")
+        response = self.send(device_id, self.commands.PULL, data)
+
+        if response and response.get('type') == self.commands.PULL_CONFIRM.value:
+            if self.debug:
+                print(f"[PULL] Successfully wrote to {device_id}")
+            return True
+        else:
+            if self.debug:
+                print(f"[PULL] Error writing to {device_id}")
+            return False
         
