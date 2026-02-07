@@ -1,6 +1,7 @@
-# EasyHTTP - Simple HTTP-based P2P framework for IoT
-from .core import EasyHTTP
+from .core import EasyHTTPAsync
 
-__version__ = "0.2.0"
+__version__ = "0.3.0-alpha"
 __author__ = "slpuk"
-__all__ = ["EasyHTTP"]
+__all__ = [
+    "EasyHTTPAsync"
+]
