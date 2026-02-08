@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "easyhttp"
-version = "0.2.0"
+version = "0.3.0-alpha"
 authors = [
     {name = "slpuk", email = "yarik6052@gmail.com"},
 ]
 description = "Simple HTTP-based P2P framework for IoT"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 keywords = ["iot", "p2p", "http", "framework"]
 classifiers = [
@@ -20,27 +20,24 @@ classifiers = [
     "Topic :: Communications",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.12"
 ]
 
-# Должно быть в разделе [project] как массив строк:
 dependencies = [
-    "Flask>=2.0.0",
-    "requests>=2.25.0",
+    "fastapi>=0.128.4",
+    "uvicorn[standard]>=0.40.0",
+    "aiohttp>=3.13.3"
 ]
 
-[project.urls]
-Homepage = "https://github.com/slpuk/easyhttp-python"
-Documentation = "https://github.com/slpuk/easyhttp-python#readme"
-Repository = "https://github.com/slpuk/easyhttp-python"
-"Issue Tracker" = "https://github.com/slpuk/easyhttp-python/issues"
+urls = [
+    Homepage = "https://github.com/slpuk/easyhttp-python"
+    Documentation = "https://github.com/slpuk/easyhttp-python#readme"
+    Repository = "https://github.com/slpuk/easyhttp-python"
+    Issue Tracker = "https://github.com/slpuk/easyhttp-python/issues"
+]
 
-[project.optional-dependencies]
 dev = [
     "pytest>=6.0",
     "black",
