@@ -1,8 +1,8 @@
 ## 🔧 API Reference
 
-> Core Methods
+> Core Methods for **0.3.0-alpha**
 
-## `EasyHTTP(debug=False, port=5000, config_file=None)`
+## `EasyHTTPAsync(debug=False, port=5000, config_file=None)`
 Initialize a new EasyHTTP device.
 
 **Parameters:**
@@ -13,7 +13,10 @@ Initialize a new EasyHTTP device.
 ## `start()`
 Start the HTTP server and generate device ID if not already set.
 
-## `add_device(device_id, ip, port)`
+## `stop()`
+Gracefully stop the HTTP server and cancel the server task.
+
+## `add(device_id, ip, port)`
 Manually add a device to the device cache.
 
 **Parameters:**
@@ -23,8 +26,7 @@ Manually add a device to the device cache.
 
 **Example:**
 ```python
-device.add_device("7H8G2K", "192.168.1.100", 5000)
-device.add_device("ABC123", "localhost", 5001)
+easy.add("ABC123", "192.168.1.100", 5000)
 ```
 
 ## `send(device_id, command_type, data=None)`
@@ -32,7 +34,7 @@ Manually sends command and data if available.
 
 **Parameters:**
 - `device_id` (str): 6-character device ID
-- `command_type` (EasyHTTP.commands): Command to send
+- `command_type` (EasyHTTPAsync.commands.value): Command to send
 - `data` (optional): Data to send (default: None)
 
 **Returns:** Response dictionary (parsed JSON) if successful, `None` if failed.
@@ -40,12 +42,12 @@ Manually sends command and data if available.
 **Example:**
 ```python
 # Send a PING command
-response = device.send("7H8G2K", EasyHTTP.commands.PING)
-if response and response.get('type') == EasyHTTP.commands.PING_OK.value:
+response = await easy.send("ABC123", easy.commands.PING.value)
+if response and response.get('type') == easy.commands.PONG.value:
     print("PING successful!")
 
-# Send custom data with GET command
-response = device.send("7H8G2K", EasyHTTP.commands.GET, {"query": "temperature"})
+# Send custom data with FETCH command
+response = await easy.send("ABC123", easy.commands.FETCH.value, {"data": "temperature"})
 if response:
     print(f"Received: {response}")
 ```
@@ -54,13 +56,13 @@ if response:
 
 | Command | Value | Description |
 |---------|-------|-------------|
-| `PING` | 3 | Check device availability |
-| `PING_OK` | 4 | Response to ping |
-| `GET` | 5 | Request data from device |
-| `DATA_RESPONSE` | 6 | Send data in response to GET |
-| `PULL` | 7 | Request to write/execute on remote device |
-| `PULL_CONFIRM` | 8 | Success confirmation for PULL command |
-| `PULL_ERROR` | 9 | Error response for PULL command |
+| `PING` | 1 | Check if another device is reachable |
+| `PONG` | 2 | Response to ping request |
+| `FETCH` | 3 | Request data from a device |
+| `DATA` | 4 | Send data or answer to FETCH |
+| `PUSH` | 5 | Request to write/execute on remote device |
+| `ACK` | 6 | Success/confirmation |
+| `NACK` | 7 | Error/abort |
 
 ### `ping(device_id)`
 Check if a device is online.
@@ -72,11 +74,11 @@ Check if a device is online.
 
 **Example:**
 ```python
-if easy.ping("7H8G2K"):
+if await easy.ping("ABC123"):
     print("Device is online!")
 ```
 
-## `get(device_id, query=None)`
+## `fetch(device_id, query=None)`
 Request data from a device.
 
 **Parameters:**
@@ -87,12 +89,12 @@ Request data from a device.
 
 **Example:**
 ```python
-response = easy.get("7H8G2K", {"sensor": "temperature"})
+response = await easy.fetch("ABC123", {"sensor": "temperature"})
 if response and 'data' in response:
     print(f"Temperature: {response['data']['temperature']}°C")
 ```
 
-## `pull(device_id, data=None)`
+## `push(device_id, data=None)`
 Send data to another device for writing or remote execution.
 
 **Parameters:**
@@ -106,17 +108,17 @@ Send data to another device for writing or remote execution.
 **Example:**
 ```python
 # Send configuration to device
-success = easy.pull("7H8G2K", {"led": "on", "brightness": 80})
+success = await easy.push("ABC123", {"led": "on", "brightness": 80})
 if success:
     print("Successfully updated device configuration!")
 else:
     print("Failed to update device configuration.")
 
 # Send a command for execution
-success = easy.pull("SENSOR1", {"command": "reboot", "delay": 5})
+success = await easy.push("ABC123", {"command": "reboot", "delay": 5})
 ```
 
-### PULL Command Workflow
+### PUSH Command Workflow
 
 ```mermaid
 sequenceDiagram
@@ -125,15 +127,15 @@ sequenceDiagram
 
     Note over DeviceA,DeviceB: DeviceA wants to control DeviceB
     
-    DeviceA->>DeviceB: PULL command with data
-    Note right of DeviceB: Triggers on_pull callback
+    DeviceA->>DeviceB: PUSH command with data
+    Note right of DeviceB: Triggers on_push callback
     
     alt Callback returns True
-        DeviceB-->>DeviceA: PULL_CONFIRM
-        Note left of DeviceA: pull() returns True
+        DeviceB-->>DeviceA: ACK
+        Note left of DeviceA: push() returns True
     else Callback returns False
-        DeviceB-->>DeviceA: PULL_ERROR
-        Note left of DeviceA: pull() returns False
+        DeviceB-->>DeviceA: NACK
+        Note left of DeviceA: push() returns False
     end
 ```
 
@@ -141,30 +143,41 @@ sequenceDiagram
 Register a callback function for an event.
 
 **Available events:**
-- `on_get`: Triggered when a GET request is received from another device
-- `on_data_response`: Triggered when data is received from another device
-- `on_ping`: Triggered when PING is received from another device (Automatically sends PING_OK)
-- `on_pull`: Triggered when PULL request is received. Callback should return `True` for success (sends PULL_CONFIRM) or `False` for error (sends PULL_ERROR).
+- `on_ping`: Triggered when PING is received from another device (Automatically sends PONG)
+- `on_pong`: Triggered when PONG is received from another device
+- `on_fetch`: Triggered when FETCH request is received from another device
+- `on_data`: Triggered when DATA is received from another device
+- `on_push`: Triggered when PUSH request is received. Callback should return `True` for success (sends ACK) or `False` for error (sends NACK).
 
 **Example:**
 ```python
-def handle_get(sender_id, timestamp):
+# Asynchronous function
+async def handle_fetch(sender_id, query, timestamp):
     return {"temperature": 24.5, "status": "normal"}
 
-def handle_pull(sender_id, data, timestamp):
+# Or synchronous
+def handle_push(sender_id, data, timestamp):
     print(f"Received control command: {data}")
     # Process the command...
     if data.get("command") == "reboot":
         schedule_reboot()
-        return True  # Send PULL_CONFIRM
-    return False  # Send PULL_ERROR
+        return True  # Send ACK
+    return False  # Send NACK
 
-def handle_data(sender_id, data, timestamp):
+async def handle_data(sender_id, data, timestamp):
     print(f"Data from {sender_id}: {data}")
 
-easy.on('on_get', handle_get)
-easy.on('on_pull', handle_pull)
-easy.on('on_data_response', handle_data)
+def handle_ping(sender_id):
+    print(f"PING from device {sender_id}")
+
+def handle_pong(sender_id):
+    print(f"PONG from device {sender_id}")
+
+easy.on('on_fetch', handle_fetch)
+easy.on('on_push', handle_push)
+easy.on('on_data', handle_data)
+easy.on('on_ping', handle_ping)
+easy.on('on_pong', handle_pong)
 ```
 
 ## Error Handling Examples
@@ -172,14 +185,14 @@ easy.on('on_data_response', handle_data)
 ```python
 # Example 1: Invalid data type
 try:
-    easy.pull("7H8G2K", set([1, 2, 3]))  # set is not JSON-serializable
+    await easy.push("ABC123", set([1, 2, 3]))  # set is not JSON-serializable
 except TypeError as e:
     print(f"Data error: {e}")
 
 # Example 2: Device not responding
-if not easy.pull("OFFLINE1", {"command": "test"}):
+if not await easy.push("ABC123", {"command": "test"}):
     print("Device offline or rejected command")
 
 # Example 3: Callback not registered on target
-# If target device has no on_pull callback, it will return PULL_ERROR
+# If target device has no on_push callback, it will return NACK
 ```
