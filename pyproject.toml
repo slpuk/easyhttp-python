@@ -31,13 +31,13 @@ dependencies = [
     "aiohttp>=3.13.3"
 ]
 
-urls = [
-    Homepage = "https://github.com/slpuk/easyhttp-python"
-    Documentation = "https://github.com/slpuk/easyhttp-python#readme"
-    Repository = "https://github.com/slpuk/easyhttp-python"
-    Issue Tracker = "https://github.com/slpuk/easyhttp-python/issues"
-]
+[project.urls]
+Homepage = "https://github.com/slpuk/easyhttp-python"
+Documentation = "https://github.com/slpuk/easyhttp-python#readme"
+Repository = "https://github.com/slpuk/easyhttp-python"
+"Issue Tracker" = "https://github.com/slpuk/easyhttp-python/issues"
 
+[project.optional-dependencies]
 dev = [
     "pytest>=6.0",
     "black",
