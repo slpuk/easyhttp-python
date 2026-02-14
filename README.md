@@ -1,9 +1,9 @@
 # EasyHTTP
-
+[EN README](README.md) | [RU README](README_RU.md)
 > **A lightweight HTTP-based P2P framework for IoT and device-to-device communication**
 
-![Protocol Version](https://img.shields.io/badge/version-0.3.0-blue?style=for-the-badge)
-![Development Status](https://img.shields.io/badge/status-alpha-red?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.3.1-blue?style=for-the-badge)
+![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.10+-blue?style=for-the-badge&logo=python&logoColor=white)
 
@@ -11,9 +11,8 @@
 > **Breaking Changes from 0.2.0**
 > 
 > ### API Changes
-> | 0.2.0 | 0.3.0-alpha | Notes |
+> | 0.2.0 | 0.3.1-beta | Notes |
 > |--------|--------|-------|
-> | `EasyHTTP()` | `EasyHTTPAsync()` | Now async/await |
 > | `get()` | `fetch()` | Same functionality |
 > | `pull()` | `push()` | Same functionality |
 > | `'on_get'` | `'on_fetch'` | Callback name |
@@ -27,9 +26,15 @@
 > easy.get("ABC123")
 > easy.pull("ABC123", data)
 > 
-> # 0.3.0-alpha (NEW):
-> easy = EasyHTTPAsync()  # ← Async!
-> await easy.fetch("ABC123")  # ← Await!
+> # 0.3.1-beta (NEW):
+> # Sync
+> easy = EasyHTTP()
+> easy.fetch("ABC123")
+> easy.push("ABC123", data)
+>
+> # Async
+> easy = EasyHTTPAsync()  # Async!
+> await easy.fetch("ABC123")  # Await!
 > await easy.push("ABC123", data)
 > ```
 
@@ -51,11 +56,45 @@ pip install -e .
 pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
-### Basic Usage(Asynchronous)
+### Basic Usage (Asynchronous)
+
+```python
+from easyhttp import EasyHTTPAsync
+
+def main():
+    # Initialize a device
+    easy = EasyHTTP(debug=True, port=5000)
+    easy.start()
+    
+    print(f"Device ID: {easy.id}")
+    
+    # Manually add another device
+    easy.add("ABC123", "192.168.1.100", 5000)
+    
+    # Ping to check if device is online
+    if easy.ping("ABC123"):
+        print("Device is online!")
+    
+    # Request data from device
+    response = easy.fetch("ABC123")
+    if response:
+        print(f"Received: {response.get('data')}")
+    
+    # Push data to device
+    success = easy.push("ABC123", {"led": "on"})
+    if success:
+        print("Command executed successfully")
+
+# Starting main process
+if __name__ == "__main__":
+    main()
+```
+
+### Or asynchronous
 
 ```python
 import asyncio
-from easyhttp import EasyHTTPAsync
+from easyhttp import EasyHTTP
 
 async def main():
     # Initialize a device
@@ -88,11 +127,11 @@ if __name__ == "__main__":
 ---
 
 > [!IMPORTANT]
-> **Version in alpha state.** Features will be added incrementally.
+> **Version in beta state.** Features will be added incrementally.
 > 
 > ## 🗺️ 0.3.x Roadmap
 > - [x] **0.3.0-alpha** — Async core (FastAPI + aiohttp)
-> - [ ] **0.3.1-beta** — Sync wrapper (`EasyHTTP` class)
+> - [x] **0.3.1-beta** — Sync wrapper (`EasyHTTP` class)
 > - [ ] **0.3.2** — Context managers
 
 ## 📖 About
@@ -110,12 +149,20 @@ if __name__ == "__main__":
 ```
 easyhttp-python/
 ├── docs/
-│   └── api.md      # API reference
+│   ├── EasyHTTP.md      # Sync API reference
+│   └── EasyHTTPAsync.md # Async API reference
 ├── easyhttp/
 │   ├── __init__.py
-│   └── core.py     # Main framework file/core
+│   ├── core.py     # Main framework file/core
+│   └── wrapper.py  # Synchronous wrapper
 ├── examples/
-│   └── async/      # Asynchronous examples
+│   ├── async/       # Asynchronous examples
+│   │   ├── basic_ping.py
+│   │   ├── callback_preview.py
+│   │   ├── device_control.py
+│   │   ├── sensor_simulator.py
+│   │   └── two_devices.py
+│   └── sync/      # Synchronous examples
 │       ├── basic_ping.py
 │       ├── callback_preview.py
 │       ├── device_control.py
@@ -124,6 +171,7 @@ easyhttp-python/
 ├── .gitignore
 ├── LICENSE             # MIT license
 ├── pyproject.toml      # Project config
+├── README_RU.md        # Russian documentation
 ├── README.md           # This file
 └── requirements.txt    # Project dependencies
 ```
@@ -149,7 +197,7 @@ EasyHTTP uses a simple JSON-based command system:
 | `DATA` | 4 | Send data or anwser to FETCH |
 | `PUSH` | 5 | Request to write/execute on remote device |
 | `ACK` | 6 | Success/confirmation |
-| `NACK` | 7 | Error/abort |
+| `NACK` | 7 | Error/reject |
 
 ### Communication Flow
 ```mermaid
@@ -184,17 +232,16 @@ cd easyhttp-python
 pip install -e .
 ```
 
-### Basic Example with Callbacks
+### Basic Example with Callbacks(Synchronous)
 ```python
-import asyncio
-from easyhttp import EasyHTTPAsync
+import time
+from easyhttp import EasyHTTP
 
-# Asynchronous callback function
-async def handle_data(sender_id, data, timestamp):
+# Callback function
+def handle_data(sender_id, data, timestamp):
     # Callback for incoming DATA responses
     print(f"From {sender_id}: {data}")
 
-# Or synchronous callback function
 def handle_fetch(sender_id, query, timestamp):
     # Callback for FETCH requests - returns data when someone requests it
     print(f"FETCH request from {sender_id}")
@@ -205,7 +252,7 @@ def handle_fetch(sender_id, query, timestamp):
         "timestamp": timestamp
     }
 
-async def handle_push(sender_id, data, timestamp):
+def handle_push(sender_id, data, timestamp):
     # Callback for PUSH requests - handle control commands
     print(f"Control from {sender_id}: {data}")
     if data and data.get("command") == "led":
@@ -215,9 +262,9 @@ async def handle_push(sender_id, data, timestamp):
         return True  # Successful → ACK
     return False  # Error → NACK
 
-async def main():
-    # Initializing EasyHTTPAsync
-    easy = EasyHTTPAsync(debug=True, port=5000)
+def main():
+    # Initializing EasyHTTP - sync wrapper of EasyHTTPAsync
+    easy = EasyHTTP(debug=True, port=5000)
     
     # Setting up callback functions
     easy.on('on_ping', handle_ping)
@@ -226,7 +273,7 @@ async def main():
     easy.on('on_data', handle_data)
     easy.on('on_push', handle_push)
     
-    await easy.start()  # Starting server
+    easy.start()  # Starting server
     print(f"Device {easy.id} is running on port 5000!")
     
     # Adding device
@@ -236,32 +283,35 @@ async def main():
     # Monitoring device's status
     try:
         while True:
-            if await easy.ping("ABC123"):
+            if easy.ping("ABC123"):
                 print("Device ABC123 is online")
             else:
                 print("Device ABC123 is offline")
             
-            await asyncio.sleep(5)
+            time.sleep(5)
     
     except KeyboardInterrupt:
         print("\nStopping device...")
-        await easy.stop()  # Stopping server
+        easy.stop()  # Stopping server
 
 # Starting main process
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
 ```
 
 ## 📚 Examples
 
 Check the [`examples/`](examples/) directory for more:
+<br> (this synchronous examples, check the [`examples/async/`](examples/async/) for asynchronous)
 
-- [`basic_ping.py`](examples/async/basic_ping.py) - Basic device communication
-- [`callback_preview.py`](examples/async/callback_preview.py) - Callback events demo
-- [`two_devices.py`](examples/async/two_devices.py) - Two devices exchanging data
-- [`sensor_simulator.py`](examples/async/sensor_simulator.py) - Simulated IoT sensor
-- [`device_control.py`](examples/async/device_control.py) - Remote device control
+- [`basic_ping.py`](examples/sync/basic_ping.py) - Basic device communication
+- [`callback_preview.py`](examples/sync/callback_preview.py) - Callback events demo
+- [`two_devices.py`](examples/sync/two_devices.py) - Two devices exchanging data
+- [`sensor_simulator.py`](examples/sync/sensor_simulator.py) - Simulated IoT sensor
+- [`device_control.py`](examples/sync/device_control.py) - Remote device control
 
 ## 🔧 API Reference
 
-Check the [`docs/api.md`](docs/api.md) directory for functions documentation
+Check the directories for functions documentation:
+- Synchronous wrapper: [`docs/EasyHTTP.md`](docs/EasyHTTP.md)
+- Asynchronous core: [`docs/EasyHTTPAsync.md`](docs/EasyHTTPAsync.md)

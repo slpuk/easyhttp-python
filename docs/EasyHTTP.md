@@ -1,8 +1,8 @@
-## 🔧 API Reference
+## 🔧 Synchronous API Reference
 
-> Core Methods for **0.3.0-alpha**
+> Core Methods for **0.3.1-beta**
 
-## `EasyHTTPAsync(debug=False, port=5000, config_file=None)`
+## `EasyHTTP(debug=False, port=5000, config_file=None)`
 Initialize a new EasyHTTP device.
 
 **Parameters:**
@@ -42,12 +42,12 @@ Manually sends command and data if available.
 **Example:**
 ```python
 # Send a PING command
-response = await easy.send("ABC123", easy.commands.PING.value)
+response = easy.send("ABC123", easy.commands.PING.value)
 if response and response.get('type') == easy.commands.PONG.value:
     print("PING successful!")
 
 # Send custom data with FETCH command
-response = await easy.send("ABC123", easy.commands.FETCH.value, {"data": "temperature"})
+response = easy.send("ABC123", easy.commands.FETCH.value, {"data": "temperature"})
 if response:
     print(f"Received: {response}")
 ```
@@ -74,7 +74,7 @@ Check if a device is online.
 
 **Example:**
 ```python
-if await easy.ping("ABC123"):
+if easy.ping("ABC123"):
     print("Device is online!")
 ```
 
@@ -89,7 +89,7 @@ Request data from a device.
 
 **Example:**
 ```python
-response = await easy.fetch("ABC123", {"sensor": "temperature"})
+response = easy.fetch("ABC123", {"sensor": "temperature"})
 if response and 'data' in response:
     print(f"Temperature: {response['data']['temperature']}°C")
 ```
@@ -108,14 +108,14 @@ Send data to another device for writing or remote execution.
 **Example:**
 ```python
 # Send configuration to device
-success = await easy.push("ABC123", {"led": "on", "brightness": 80})
+success = easy.push("ABC123", {"led": "on", "brightness": 80})
 if success:
     print("Successfully updated device configuration!")
 else:
     print("Failed to update device configuration.")
 
 # Send a command for execution
-success = await easy.push("ABC123", {"command": "reboot", "delay": 5})
+success = easy.push("ABC123", {"command": "reboot", "delay": 5})
 ```
 
 ### PUSH Command Workflow
@@ -151,11 +151,10 @@ Register a callback function for an event.
 
 **Example:**
 ```python
-# Asynchronous function
-async def handle_fetch(sender_id, query, timestamp):
+# Only synchronous callback funtions
+def handle_fetch(sender_id, query, timestamp):
     return {"temperature": 24.5, "status": "normal"}
 
-# Or synchronous
 def handle_push(sender_id, data, timestamp):
     print(f"Received control command: {data}")
     # Process the command...
@@ -164,7 +163,7 @@ def handle_push(sender_id, data, timestamp):
         return True  # Send ACK
     return False  # Send NACK
 
-async def handle_data(sender_id, data, timestamp):
+def handle_data(sender_id, data, timestamp):
     print(f"Data from {sender_id}: {data}")
 
 def handle_ping(sender_id):
@@ -185,12 +184,12 @@ easy.on('on_pong', handle_pong)
 ```python
 # Example 1: Invalid data type
 try:
-    await easy.push("ABC123", set([1, 2, 3]))  # set is not JSON-serializable
+    easy.push("ABC123", set([1, 2, 3]))  # set is not JSON-serializable
 except TypeError as e:
     print(f"Data error: {e}")
 
 # Example 2: Device not responding
-if not await easy.push("ABC123", {"command": "test"}):
+if not easy.push("ABC123", {"command": "test"}):
     print("Device offline or rejected command")
 
 # Example 3: Callback not registered on target
