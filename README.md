@@ -227,7 +227,7 @@ sequenceDiagram
 pip install git+https://github.com/slpuk/easyhttp-python.git
 
 # Or install from source
-git clone https://github.com/Slpuk/easyhttp-python
+git clone https://github.com/slpuk/easyhttp-python
 cd easyhttp-python
 pip install -e .
 ```
