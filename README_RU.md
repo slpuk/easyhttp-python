@@ -235,7 +235,7 @@ pip install -e .
 ### Простой пример с коллбэками
 ```python
 import time
-from easyhttp import EasyHTTPAsync
+from easyhttp import EasyHTTP
 
 # Коллбэк функция
 def handle_data(sender_id, data, timestamp):
@@ -300,7 +300,7 @@ if __name__ == "__main__":
 ## 📚 Примеры
 
 Проверьте [`examples/`](examples/) для дополнительных примеров:
-<br> (ниже синхронные примеры, проверьте [`examples/async/`](examples/async/) для асинхронных)
+<br> (ниже синхронные примеры, асинхронные в [`examples/async/`](examples/async/))
 
 - [`basic_ping.py`](examples/sync/basic_ping.py) - Базовая коммуникация между устройствами
 - [`callback_preview.py`](examples/sync/callback_preview.py) - Демонстрация работы коллбэков
