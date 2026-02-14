@@ -17,7 +17,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-__version__ = "0.3.0-alpha"
+__version__ = "0.3.1-beta"
 
 class EasyHTTPAsync:
     """Simple asynchronous HTTP-based core of P2P framework for IoT."""
@@ -63,7 +63,7 @@ class EasyHTTPAsync:
             'on_push': None
         }
         self.devices = {}
-        self.app = FastAPI(title="EasyHTTP API")
+        self.app = FastAPI(title="EasyHTTP API", docs_url=None, redoc_url=None)
         self.app.post('/easyhttp/api')(self.api_handler)
         self.server_task = None
         self._load_config()
@@ -179,7 +179,8 @@ class EasyHTTPAsync:
                 self.app, 
                 host="0.0.0.0", 
                 port=self.port,
-                log_level="info" if self.debug else "warning"
+                log_level="warning",
+                lifespan="off"
             )
             
             server = uvicorn.Server(config)
@@ -362,9 +363,15 @@ class EasyHTTPAsync:
             if self.callbacks['on_ping']:
                 callback = self.callbacks['on_ping']
                 if asyncio.iscoroutinefunction(callback):
-                    await callback(sender_id)
+                    await callback(
+                        sender_id=sender_id,
+                        timestamp=header.get('timestamp')
+                    )
                 else:
-                    callback(sender_id)
+                    callback(
+                        sender_id=sender_id,
+                        timestamp=header.get('timestamp')
+                    )
                 
             return JSONResponse({
                 "version": __version__,
@@ -382,9 +389,15 @@ class EasyHTTPAsync:
             if self.callbacks['on_pong']:
                 callback = self.callbacks['on_pong']
                 if asyncio.iscoroutinefunction(callback):
-                    await callback(sender_id)
+                    await callback(
+                        sender_id=sender_id,
+                        timestamp=header.get('timestamp')
+                    )
                 else:
-                    callback(sender_id)
+                    callback(
+                        sender_id=sender_id,
+                        timestamp=header.get('timestamp')
+                    )
 
             if self.debug:
                 print(f"\033[32mPONG\033[0m:\t Received from {sender_id}")
@@ -395,15 +408,15 @@ class EasyHTTPAsync:
         # Handle FETCH response
         elif command_type == self.commands.FETCH.value:
             if self.callbacks['on_fetch']:
-                response_data = self.callbacks['on_fetch']
-                if asyncio.iscoroutinefunction(response_data):
-                    await response_data(
+                callback = self.callbacks['on_fetch']
+                if asyncio.iscoroutinefunction(callback):
+                    response_data = await callback (
                         sender_id=sender_id,
                         query=data.get('data'),
                         timestamp=header.get('timestamp')
                     )
                 else:
-                    response_data(
+                    response_data = callback (
                         sender_id=sender_id,
                         query=data.get('data'),
                         timestamp=header.get('timestamp')
@@ -436,15 +449,15 @@ class EasyHTTPAsync:
                     },
                 }, status_code=400)
 
-            success = self.callbacks['on_push']
-            if asyncio.iscoroutinefunction(success):
-                await success(
+            callback = self.callbacks['on_push']
+            if asyncio.iscoroutinefunction(callback):
+                success = await callback(
                     sender_id=sender_id,
                     data=data.get('data'),
                     timestamp=header.get('timestamp')
                 )
             else:
-                success(
+                success = callback(
                     sender_id=sender_id,
                     data=data.get('data'),
                     timestamp=header.get('timestamp')
