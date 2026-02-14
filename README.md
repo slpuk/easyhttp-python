@@ -56,10 +56,10 @@ pip install -e .
 pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
-### Basic Usage (Asynchronous)
+### Basic Usage (synchronous)
 
 ```python
-from easyhttp import EasyHTTPAsync
+from easyhttp import EasyHTTP
 
 def main():
     # Initialize a device
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
 ```python
 import asyncio
-from easyhttp import EasyHTTP
+from easyhttp import EasyHTTPAsync
 
 async def main():
     # Initialize a device
