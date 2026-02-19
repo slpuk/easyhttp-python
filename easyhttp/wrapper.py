@@ -130,6 +130,16 @@ class EasyHTTP:
         return self._loop.run_until_complete(
             self._core.push(device_id, data)
         )
+
+    # Context manager support
+    def __enter__(self):
+        """Enter the sync context manager."""
+        self.start()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the sync context manager."""
+        self.stop()
     
     # Property accessors
     @property

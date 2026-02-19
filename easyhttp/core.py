@@ -17,7 +17,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-__version__ = "0.3.1-beta"
+__version__ = "0.3.2"
 
 class EasyHTTPAsync:
     """Simple asynchronous HTTP-based core of P2P framework for IoT."""
@@ -67,6 +67,15 @@ class EasyHTTPAsync:
         self.app.post('/easyhttp/api')(self.api_handler)
         self.server_task = None
         self._load_config()
+
+    async def __aenter__(self):
+        """Enter the async context manager."""
+        await self.start()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Exit the async context manager."""
+        await self.stop()
 
     def _load_config(self):
         try:
@@ -193,7 +202,7 @@ class EasyHTTPAsync:
             await asyncio.sleep(2)  # Give server time to start
 
             if self.debug:
-                print(f"\033[32mINFO\033[0m:\t \033[32m\033[1mEasyHTTP \033[37m{__version__}\033[0m has been started!")
+                print(f"\033[32mINFO\033[0m:\t \033[1;32mEasyHTTP \033[37m{__version__}\033[0m has been started!")
                 print(f"\033[32mINFO\033[0m:\t Device's ID: {self.id}")
                 print(f"\033[32mINFO\033[0m:\t EasyHTTP starting on port {self.port}")
                 print(f"\033[32mINFO\033[0m:\t API running on \033[1mhttp://{self._get_local_ip()}:{self.port}/easyhttp/api\033[0m")
