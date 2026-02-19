@@ -1,6 +1,6 @@
 ## 🔧 Asynchronous API Reference
 
-> Core Methods for **0.3.1-beta**
+> Core Methods for **0.3.2**
 
 ## `EasyHTTPAsync(debug=False, port=5000, config_file=None)`
 Initialize a new asynchronous EasyHTTP device.
@@ -195,4 +195,16 @@ if not await easy.push("ABC123", {"command": "test"}):
 
 # Example 3: Callback not registered on target
 # If target device has no on_push callback, it will return NACK
+```
+
+## Context Managers
+Framework supports context managers & full syntax, automatically starting/stopping the server.
+
+```python
+from easyhttp import EasyHTTPAsync
+
+async with EasyHTTPAsync(debug=True, port=5000) as easy:
+    easy.add("ABC123", "192.168.1.100", 5000)
+    if await easy.ping("ABC123"):
+        print("Device is online!")
 ```

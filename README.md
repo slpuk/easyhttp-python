@@ -2,16 +2,16 @@
 [EN README](README.md) | [RU README](README_RU.md)
 > **A lightweight HTTP-based P2P framework for IoT and device-to-device communication**
 
-![Protocol Version](https://img.shields.io/badge/version-0.3.1-blue?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.3.2-blue?style=for-the-badge)
 ![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
-![Python](https://img.shields.io/badge/python-3.10+-blue?style=for-the-badge&logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
 > [!WARNING]
 > **Breaking Changes from 0.2.0**
 > 
 > ### API Changes
-> | 0.2.0 | 0.3.1-beta | Notes |
+> | 0.2.0 | 0.3.2 | Notes |
 > |--------|--------|-------|
 > | `get()` | `fetch()` | Same functionality |
 > | `pull()` | `push()` | Same functionality |
@@ -26,7 +26,7 @@
 > easy.get("ABC123")
 > easy.pull("ABC123", data)
 > 
-> # 0.3.1-beta (NEW):
+> # 0.3.2 (NEW):
 > # Sync
 > easy = EasyHTTP()
 > easy.fetch("ABC123")
@@ -57,33 +57,32 @@ pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
 ### Basic Usage (synchronous)
+Syntax with context managers and full code is supported
 
 ```python
 from easyhttp import EasyHTTP
 
 def main():
-    # Initialize a device
-    easy = EasyHTTP(debug=True, port=5000)
-    easy.start()
+    # Initialize a device with context manager
+    with EasyHTTP(debug=True, port=5000) as easy:
+        print(f"Device ID: {easy.id}")
     
-    print(f"Device ID: {easy.id}")
+        # Manually add another device
+        easy.add("ABC123", "192.168.1.100", 5000)
     
-    # Manually add another device
-    easy.add("ABC123", "192.168.1.100", 5000)
+        # Ping to check if device is online
+        if easy.ping("ABC123"):
+            print("Device is online!")
     
-    # Ping to check if device is online
-    if easy.ping("ABC123"):
-        print("Device is online!")
+        # Request data from device
+        response = easy.fetch("ABC123")
+        if response:
+            print(f"Received: {response.get('data')}")
     
-    # Request data from device
-    response = easy.fetch("ABC123")
-    if response:
-        print(f"Received: {response.get('data')}")
-    
-    # Push data to device
-    success = easy.push("ABC123", {"led": "on"})
-    if success:
-        print("Command executed successfully")
+        # Push data to device
+        success = easy.push("ABC123", {"led": "on"})
+        if success:
+            print("Command executed successfully")
 
 # Starting main process
 if __name__ == "__main__":
@@ -126,20 +125,13 @@ if __name__ == "__main__":
 ```
 ---
 
-> [!IMPORTANT]
-> **Version in beta state.** Features will be added incrementally.
-> 
-> ## 🗺️ 0.3.x Roadmap
-> - [x] **0.3.0-alpha** — Async core (FastAPI + aiohttp)
-> - [x] **0.3.1-beta** — Sync wrapper (`EasyHTTP` class)
-> - [ ] **0.3.2** — Context managers
-
 ## 📖 About
 
 **EasyHTTP** is a simple yet powerful framework with asynchronous core that enables P2P (peer-to-peer) communication between devices using plain HTTP.
 
 ### Key Features:
 - **🔄 P2P Architecture** - No central server required
+- **🧩 Dual API:** `EasyHTTP` (synchronous) and `EasyHTTPAsync` (asynchronous) with the same methods
 - **📡 Event-Driven Communication** - Callback-based architecture
 - **🆔 Human-Readable Device IDs** - Base32 identifiers instead of IP addresses
 - **✅ Easy to Use** - Simple API with minimal setup
@@ -194,7 +186,7 @@ EasyHTTP uses a simple JSON-based command system:
 | `PING` | 1 | Check if another device is reachable |
 | `PONG` | 2 | Response to ping request |
 | `FETCH` | 3 | Request data from a device |
-| `DATA` | 4 | Send data or anwser to FETCH |
+| `DATA` | 4 | Send data or answer to FETCH |
 | `PUSH` | 5 | Request to write/execute on remote device |
 | `ACK` | 6 | Success/confirmation |
 | `NACK` | 7 | Error/reject |
@@ -302,9 +294,9 @@ if __name__ == "__main__":
 ## 📚 Examples
 
 Check the [`examples/`](examples/) directory for more:
-<br> (this synchronous examples, check the [`examples/async/`](examples/async/) for asynchronous)
+<br> (synchronous examples below; check [`examples/async/`](examples/async/) for asynchronous versions)
 
-- [`basic_ping.py`](examples/sync/basic_ping.py) - Basic device communication
+- [`basic_ping.py`](examples/sync/basic_ping.py) - Basic device communication using context manager
 - [`callback_preview.py`](examples/sync/callback_preview.py) - Callback events demo
 - [`two_devices.py`](examples/sync/two_devices.py) - Two devices exchanging data
 - [`sensor_simulator.py`](examples/sync/sensor_simulator.py) - Simulated IoT sensor

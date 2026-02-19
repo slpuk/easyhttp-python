@@ -1,6 +1,6 @@
 ## 🔧 Synchronous API Reference
 
-> Core Methods for **0.3.1-beta**
+> Core Methods for **0.3.2**
 
 ## `EasyHTTP(debug=False, port=5000, config_file=None)`
 Initialize a new EasyHTTP device.
@@ -101,7 +101,7 @@ Send data to another device for writing or remote execution.
 - `device_id` (str): ID of the device to query
 - `data` (dict/list/str/int/float/bool, optional): Data to send. Must be JSON-serializable (default: None)
 
-**Returns:** `True` if device confirmed successful write (PULL_CONFIRM), `False` if device responded with error or no response.
+**Returns:** `True` if device confirmed successful write (ACK), `False` if device responded with error or no response.
 
 **Raises:** `TypeError`: If data is not JSON-serializable
 
@@ -194,4 +194,16 @@ if not easy.push("ABC123", {"command": "test"}):
 
 # Example 3: Callback not registered on target
 # If target device has no on_push callback, it will return NACK
+```
+
+## Context Managers
+Framework supports context managers & full syntax, automatically starting/stopping the server.
+
+```python
+from easyhttp import EasyHTTP
+
+with EasyHTTP(debug=True, port=5000) as easy:
+    easy.add("ABC123", "192.168.1.100", 5000)
+    if easy.ping("ABC123"):
+        print("Device is online!")
 ```
