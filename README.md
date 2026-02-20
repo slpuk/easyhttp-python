@@ -47,10 +47,8 @@
 > PyPI upload is **preparing**
 
 ```bash
-# Clone and install
-git clone https://github.com/slpuk/easyhttp-python.git
-cd easyhttp-python
-pip install -e .
+# Install by PyPI
+pip install easyhttp-python
 
 # Or directly from GitHub
 pip install git+https://github.com/slpuk/easyhttp-python.git
@@ -163,6 +161,7 @@ easyhttp-python/
 ├── .gitignore
 ├── LICENSE             # MIT license
 ├── pyproject.toml      # Project config
+├── README_PY.md        # Documentation for PyPI
 ├── README_RU.md        # Russian documentation
 ├── README.md           # This file
 └── requirements.txt    # Project dependencies
@@ -215,13 +214,11 @@ sequenceDiagram
 > PyPI upload is **preparing**
 
 ```bash
-# Install directly from GitHub
-pip install git+https://github.com/slpuk/easyhttp-python.git
+# Install from PyPI
+pip install easyhttp-python
 
-# Or install from source
-git clone https://github.com/slpuk/easyhttp-python
-cd easyhttp-python
-pip install -e .
+# Or directly from GitHub
+pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
 ### Basic Example with Callbacks(Synchronous)

@@ -47,12 +47,10 @@
 > **Идёт подготовка** к публикации на PyPI.
 
 ```bash
-# Скопируйте и установите
-git clone https://github.com/slpuk/easyhttp-python.git
-cd easyhttp-python
-pip install -e .
+# Установка с PyPI
+pip install easyhttp-python
 
-# Либо напрямую с GitHub
+# Либо с GitHub
 pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
@@ -163,6 +161,7 @@ easyhttp-python/
 ├── .gitignore
 ├── LICENSE             # Лицензия MIT
 ├── pyproject.toml      # Конфиг проекта
+├── README_PY.md        # Документация для PyPI
 ├── README_RU.md        # Этот файл
 ├── README.md           # Английская документация
 └── requirements.txt    # Зависимости проекта
@@ -215,13 +214,11 @@ sequenceDiagram
 > **Идёт подготовка** к публикации на PyPI.
 
 ```bash
-# Напрямую с GitHub
-pip install git+https://github.com/slpuk/easyhttp-python.git
+# Установка с PyPI
+pip install easyhttp-python
 
-# Либой скопируйте и установите
-git clone https://github.com/slpuk/easyhttp-python
-cd easyhttp-python
-pip install -e .
+# Либо с GitHub
+pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
 ### Простой пример с коллбэками
