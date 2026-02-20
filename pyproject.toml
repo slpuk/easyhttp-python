@@ -3,18 +3,18 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "easyhttp"
+name = "easyhttp-python"
 version = "0.3.2"
 authors = [
     {name = "slpuk", email = "yarik6052@gmail.com"},
 ]
 description = "Simple HTTP-based P2P framework for IoT"
-readme = "README.md"
+readme = "README_PY.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
 keywords = ["iot", "p2p", "http", "framework"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Communications",
