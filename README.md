@@ -42,15 +42,12 @@
 ## 🚀 Quick Start
 
 ### Installation
-> [!NOTE]
-> Both methods require **Git** to be installed.<br>
-> PyPI upload is **preparing**
 
 ```bash
 # Install by PyPI
 pip install easyhttp-python
 
-# Or directly from GitHub
+# Or from GitHub
 pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
@@ -208,16 +205,13 @@ sequenceDiagram
 
 ## 📦 Installation & Setup
 
-### Python Installation
-> [!NOTE]
-> Both methods require **Git** to be installed.<br>
-> PyPI upload is **preparing**
+### Installation
 
 ```bash
 # Install from PyPI
 pip install easyhttp-python
 
-# Or directly from GitHub
+# Or from GitHub
 pip install git+https://github.com/slpuk/easyhttp-python.git
 ```
 
