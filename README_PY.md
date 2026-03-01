@@ -1,7 +1,7 @@
 # EasyHTTP
 
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/slpuk/easyhttp-python)
-![Protocol Version](https://img.shields.io/badge/version-0.3.2-blue?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.3.3-blue?style=for-the-badge)
 ![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
@@ -51,7 +51,7 @@ EasyHTTP uses a simple JSON-based command system:
 ### Basic Example with Callbacks (synchronous)
 ```python
 import time
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 # Callback function
 def handle_data(sender_id, data, timestamp):

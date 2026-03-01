@@ -2,42 +2,22 @@
 [EN README](README.md) | [RU README](README_RU.md)
 > **A lightweight HTTP-based P2P framework for IoT and device-to-device communication**
 
-![Protocol Version](https://img.shields.io/badge/version-0.3.2-blue?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.3.3-blue?style=for-the-badge)
 ![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
 > [!WARNING]
-> **Breaking Changes from 0.2.0**
+> **Breaking Changes from 0.3.2**
 > 
 > ### API Changes
-> | 0.2.0 | 0.3.2 | Notes |
-> |--------|--------|-------|
-> | `get()` | `fetch()` | Same functionality |
-> | `pull()` | `push()` | Same functionality |
-> | `'on_get'` | `'on_fetch'` | Callback name |
-> | `'on_data_response'` | `'on_data'` | Callback name |
-> | `'on_pull'` | `'on_push'` | Callback name |
-> 
-> ### Migration Example
 > ```python
-> # 0.2.0 (OLD):
-> easy = EasyHTTP()
-> easy.get("ABC123")
-> easy.pull("ABC123", data)
-> 
-> # 0.3.2 (NEW):
-> # Sync
-> easy = EasyHTTP()
-> easy.fetch("ABC123")
-> easy.push("ABC123", data)
+> # 0.3.2 (OLD)
+> from easyhttp import ...
 >
-> # Async
-> easy = EasyHTTPAsync()  # Async!
-> await easy.fetch("ABC123")  # Await!
-> await easy.push("ABC123", data)
-> ```
-
+> # 0.3.3 (NEW)
+> from easyhttp_python import ...
+>```
 
 ## 🚀 Quick Start
 
@@ -55,7 +35,7 @@ pip install git+https://github.com/slpuk/easyhttp-python.git
 Syntax with context managers and full code is supported
 
 ```python
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 def main():
     # Initialize a device with context manager
@@ -88,7 +68,7 @@ if __name__ == "__main__":
 
 ```python
 import asyncio
-from easyhttp import EasyHTTPAsync
+from easyhttp_python import EasyHTTPAsync
 
 async def main():
     # Initialize a device
@@ -138,7 +118,7 @@ easyhttp-python/
 ├── docs/
 │   ├── EasyHTTP.md      # Sync API reference
 │   └── EasyHTTPAsync.md # Async API reference
-├── easyhttp/
+├── easyhttp_python/
 │   ├── __init__.py
 │   ├── core.py     # Main framework file/core
 │   └── wrapper.py  # Synchronous wrapper
@@ -218,7 +198,7 @@ pip install git+https://github.com/slpuk/easyhttp-python.git
 ### Basic Example with Callbacks(Synchronous)
 ```python
 import time
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 # Callback function
 def handle_data(sender_id, data, timestamp):

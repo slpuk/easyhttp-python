@@ -2,42 +2,22 @@
 [EN README](README.md) | [RU README](README_RU.md)
 > **Легковесный фреймворк на базе HTTP для P2P-связи в IoT**
 
-![Protocol Version](https://img.shields.io/badge/version-0.3.2-blue?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.3.3-blue?style=for-the-badge)
 ![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
 > [!WARNING]
-> **Важные изменения с 0.2.0**
+> **Важные изменения с 0.3.2**
 > 
 > ### Изменения в API
-> | 0.2.0 | 0.3.2 | Notes |
-> |--------|--------|-------|
-> | `get()` | `fetch()` | Тот же функционал |
-> | `pull()` | `push()` | Тот же функционал |
-> | `'on_get'` | `'on_fetch'` | Переименование коллбэка |
-> | `'on_data_response'` | `'on_data'` | Переименование коллбэка |
-> | `'on_pull'` | `'on_push'` | Переименование коллбэка |
-> 
-> ### Пример миграции
 > ```python
-> # 0.2.0 (СТАРЫЙ):
-> easy = EasyHTTP()
-> easy.get("ABC123")
-> easy.pull("ABC123", data)
-> 
-> # 0.3.2 (НОВЫЙ):
-> # Синхр.
-> easy = EasyHTTP()
-> easy.fetch("ABC123")
-> easy.push("ABC123", data)
+> # 0.3.2 (СТАРЫЙ)
+> from easyhttp import ...
 >
-> # Асинхр.
-> easy = EasyHTTPAsync()  # Async!
-> await easy.fetch("ABC123")  # Await!
-> await easy.push("ABC123", data)
-> ```
-
+> # 0.3.3 (НОВЫЙ)
+> from easyhttp_python import ...
+>```
 
 ## 🚀 Быстрый Старт
 
@@ -55,7 +35,7 @@ pip install git+https://github.com/slpuk/easyhttp-python.git
 Поддерживается синтаксис с контекстными менеджерами и полным кодом
 
 ```python
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 def main():
     # Инициализируем библиотеку
@@ -88,7 +68,7 @@ if __name__ == "__main__":
 
 ```python
 import asyncio
-from easyhttp import EasyHTTPAsync
+from easyhttp_python import EasyHTTPAsync
 
 async def main():
     # Инициализируем библиотеку
@@ -138,7 +118,7 @@ easyhttp-python/
 ├── docs/
 │   ├── EasyHTTP.md      # Документация синхронного API
 │   └── EasyHTTPAsync.md # Документация асинхронного API
-├── easyhttp/
+├── easyhttp_python/
 │   ├── __init__.py
 │   ├── core.py     # Основной код фреймворка
 │   └── wrapper.py  # Синхронная оболочка
@@ -218,7 +198,7 @@ pip install git+https://github.com/slpuk/easyhttp-python.git
 ### Простой пример с коллбэками
 ```python
 import time
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 # Коллбэк функция
 def handle_data(sender_id, data, timestamp):
