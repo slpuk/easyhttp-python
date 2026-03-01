@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "easyhttp-python"
-version = "0.3.2"
+version = "0.3.3"
 authors = [
     {name = "slpuk", email = "yarik6052@gmail.com"},
 ]
@@ -48,4 +48,4 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["easyhttp"]
+packages = ["easyhttp_python"]
