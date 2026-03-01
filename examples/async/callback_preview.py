@@ -1,6 +1,6 @@
 import asyncio
 # Import asynchronous core of EasyHTTP
-from easyhttp import EasyHTTPAsync
+from easyhttp_python import EasyHTTPAsync
 
 '''
 Callback functions

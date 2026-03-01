@@ -1,5 +1,5 @@
 import asyncio
-from easyhttp import EasyHTTPAsync
+from easyhttp_python import EasyHTTPAsync
 
 # Callback function on FETCH
 async def handle_fetch(sender_id, query, timestamp):

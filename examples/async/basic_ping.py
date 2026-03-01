@@ -1,6 +1,6 @@
 # Simple ping script with EasyHTTPAsync & context manager
 import asyncio
-from easyhttp import EasyHTTPAsync
+from easyhttp_python import EasyHTTPAsync
 
 async def main():
     # Async context manager whuch initializing EasyHTTPAsync

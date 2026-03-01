@@ -1,5 +1,5 @@
 import time
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 # PUSH request callback
 def handle_push(sender_id, data, timestamp):

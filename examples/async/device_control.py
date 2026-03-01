@@ -1,5 +1,5 @@
 import asyncio
-from easyhttp import EasyHTTPAsync
+from easyhttp_python import EasyHTTPAsync
 
 # PUSH request callback
 async def handle_push(sender_id, data, timestamp):

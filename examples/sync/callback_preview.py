@@ -1,6 +1,6 @@
 import time
 # Import synchronous wrapper of EasyHTTP
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 '''
 Callback functions

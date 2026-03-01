@@ -1,5 +1,5 @@
 import time
-from easyhttp import EasyHTTP
+from easyhttp_python import EasyHTTP
 
 # Callback function on FETCH
 def handle_fetch(sender_id, query, timestamp):
