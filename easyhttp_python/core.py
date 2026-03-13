@@ -5,6 +5,7 @@ import secrets
 import time
 import logging
 import json
+import struct
 from pathlib import Path
 from enum import Enum, auto
 from typing import Optional, Union, Dict, Any, Callable
@@ -17,23 +18,44 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-__version__ = "0.3.3"
+# EasyHTTP modules
+from ._discovery import Discovery
+
+# Initializing logger
+from loggity import Logger, Colors, LoggerConfig
+log_config = LoggerConfig(
+    colored = True,
+    timestamps = False,
+    timeformat = None,
+    file = None
+)
+log = Logger(config = log_config)
 
 class EasyHTTPAsync:
     """Simple asynchronous HTTP-based core of P2P framework for IoT."""
-    
+    __version__ = "0.4.0-alpha.6"
+
     class commands(Enum):
         """Enumeration of available command types."""
 
-        PING = auto()   # Ping another device
-        PONG = auto()   # Anwser for PING
+        PING = auto()  # Ping another device
+        PONG = auto()  # Anwser for PING
         FETCH = auto()  # Request data from another device
-        DATA = auto()   # Response containing data
-        PUSH = auto()   # Send data to another device
-        ACK = auto()    # Acknowledge successful command
-        NACK = auto()   # Indicate an error occurred
+        DATA = auto()  # Response containing data
+        PUSH = auto()  # Send data to another device
+        ACK = auto()  # Acknowledge successful command
+        NACK = auto()  # Indicate an error occurred
+        # New for discovery
+        DISCOVERY = auto()  # Broadcast discovery request
+        DISCOVERY_ACK = auto()  # Response to discovery
 
-    def __init__(self, debug: bool = False, port: int = 5000, config_file=None):
+    def __init__(
+        self,
+        debug: bool = False,
+        port: int = 5000,
+        config_file=None,
+        enable_discovery: bool = True,
+    ):
         """Initialize the EasyHTTPAsync instance.
 
         Args:
@@ -43,12 +65,17 @@ class EasyHTTPAsync:
 
         self.debug = debug
         self.port = port
+        self.enable_discovery = enable_discovery
+
+        if self.enable_discovery:
+            self.discovery = Discovery(self)
 
         if config_file:
             self.config_file = config_file
         else:
             import sys
-            if getattr(sys, 'frozen', False):
+
+            if getattr(sys, "frozen", False):
                 base_dir = os.path.dirname(sys.executable)
             else:
                 base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -56,23 +83,24 @@ class EasyHTTPAsync:
 
         self.id = None
         self.callbacks = {
-            'on_ping': None,
-            'on_pong': None,
-            'on_fetch': None,
-            'on_data': None,
-            'on_push': None
+            "on_ping": None,
+            "on_pong": None,
+            "on_fetch": None,
+            "on_data": None,
+            "on_push": None,
         }
         self.devices = {}
         self.app = FastAPI(title="EasyHTTP API", docs_url=None, redoc_url=None)
-        self.app.post('/easyhttp/api')(self.api_handler)
+        self.app.post("/easyhttp/api")(self.api_handler)
         self.server_task = None
+
         self._load_config()
 
     async def __aenter__(self):
         """Enter the async context manager."""
         await self.start()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Exit the async context manager."""
         await self.stop()
@@ -80,37 +108,33 @@ class EasyHTTPAsync:
     def _load_config(self):
         try:
             if os.path.exists(self.config_file):
-                with open(self.config_file, 'r') as f:
+                with open(self.config_file, "r") as f:
                     data = json.load(f)
-                    self.id = data.get('device_id')
-                    
+                    self.id = data.get("device_id")
+
                 if self.debug and self.id:
-                    print(f"\033[32mINFO\033[0m:\t Loaded ID: {self.id} from {self.config_file}")
+                    log.info(f"Loaded ID: {self.id} from {self.config_file}")
         except Exception as e:
             if self.debug:
-                print(f"\033[31mERROR\033[0m:\t Error loading config: {e}")
-    
+                log.error(f"Error loading config: {e}")
+
     def _save_config(self):
         try:
-            config = {
-                'device_id': self.id,
-                'port': self.port,
-                'version': __version__
-            }
-            
-            with open(self.config_file, 'w') as f:
+            config = {"device_id": self.id, "port": self.port, "version": self.__version__}
+
+            with open(self.config_file, "w") as f:
                 json.dump(config, f, indent=2)
-            
+
             if self.debug:
-                print(f"\033[32mINFO\033[0m:\t Saved ID to {self.config_file}")
+                log.info(f"Saved ID to {self.config_file}")
         except Exception as e:
             if self.debug:
-                print(f"\033[31mERROR\033[0m:\t Error saving config: {e}")
+                log.error(f"Error saving config: {e}")
 
     def _get_local_ip(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(('8.8.8.8', 80))
+            s.connect(("8.8.8.8", 80))
             local_ip = s.getsockname()[0]
             s.close()
             return local_ip
@@ -131,7 +155,7 @@ class EasyHTTPAsync:
         """
 
         alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
-        self.id = ''.join(secrets.choice(alphabet) for _ in range(length))
+        self.id = "".join(secrets.choice(alphabet) for _ in range(length))
         self._save_config()
 
     def on(self, event: str, callback_func: Callable) -> None:
@@ -164,18 +188,18 @@ class EasyHTTPAsync:
 
         if len(device_id) != 6:
             raise ValueError("Device ID must be 6 characters")
-    
+
         if device_id not in self.devices:
             self.devices[device_id] = {
-                'ip': device_ip,
-                'port': int(device_port),
-                'last_seen': time.time(),
-                'added_manually': True
+                "ip": device_ip,
+                "port": int(device_port),
+                "last_seen": time.time(),
+                "added_manually": True,
             }
             if self.debug:
-                print(f"DEBUG:\t Added device {device_id}: {device_ip}:{device_port}")
+                log.debug(f"Added device {device_id}: {device_ip}:{device_port}")
         else:
-            print(f"DEBUG:\t Device already exists")
+            log.debug("Device already exists")
 
     async def start(self) -> None:
         """Start the HTTP server and generate a device ID if not set."""
@@ -185,34 +209,44 @@ class EasyHTTPAsync:
 
         try:
             config = uvicorn.Config(
-                self.app, 
-                host="0.0.0.0", 
+                self.app,
+                host="0.0.0.0",
                 port=self.port,
                 log_level="warning",
-                lifespan="off"
+                lifespan="off",
             )
-            
+
             server = uvicorn.Server(config)
             self.server_task = asyncio.create_task(server.serve())
 
-            logging.getLogger('werkzeug').disabled = True
-            logging.getLogger('uvicorn.error').propagate = False
-            logging.getLogger('uvicorn.access').propagate = False
+            logging.getLogger("werkzeug").disabled = True
+            logging.getLogger("uvicorn.error").propagate = False
+            logging.getLogger("uvicorn.access").propagate = False
+
+            # Starting discovery
+            if self.enable_discovery:
+                await self.discovery.start()
 
             await asyncio.sleep(2)  # Give server time to start
 
             if self.debug:
-                print(f"\033[32mINFO\033[0m:\t \033[1;32mEasyHTTP \033[37m{__version__}\033[0m has been started!")
-                print(f"\033[32mINFO\033[0m:\t Device's ID: {self.id}")
-                print(f"\033[32mINFO\033[0m:\t EasyHTTP starting on port {self.port}")
-                print(f"\033[32mINFO\033[0m:\t API running on \033[1mhttp://{self._get_local_ip()}:{self.port}/easyhttp/api\033[0m")
-            
+                log.info(f"\033[1;32mEasyHTTP \033[37m{self.__version__}\033[0m has been started!")
+                log.info(f"Device's ID: {self.id}")
+                log.info(f"EasyHTTP starting on port {self.port}")
+                log.info(f"API running on \033[1mhttp://{self._get_local_ip()}:{self.port}/easyhttp/api\033[0m")
+                if self.enable_discovery:
+                    log.info(f"Discovery enabled on {self.discovery.multicast_group}:{self.discovery.multicast_port}")
+
         except Exception as e:
-            print(f"\033[31mERROR\033[0m:\t Failed to start server: {e}")
+            log.error(f"Failed to start server: {e}")
             raise
 
     async def stop(self) -> None:
         """Gracefully stop the HTTP server and cancel the server task."""
+
+        # Stopping discovery
+        if hasattr(self, 'discovery') and self.discovery:
+            await self.discovery.stop()
 
         if self.server_task:
             self.server_task.cancel()
@@ -221,7 +255,34 @@ class EasyHTTPAsync:
             except asyncio.CancelledError:
                 pass
 
-    async def send(self, device_id: str, command_type: Union[int, 'commands'], data: Optional[Any] = None) -> Optional[dict]:
+    async def start_discovery(self):
+        """Manually start discovery service."""
+        if self.debug:
+            log.debug("Enabled discovery")
+        self.enable_discovery = True
+        await self.discovery.start()
+
+    async def stop_discovery(self):
+        """Manually stop discovery service."""
+        if self.debug:
+            log.debug("Disabled discovery")
+        self.enable_discovery = False
+        await self.discovery.stop()
+
+    def get_discovered(self) -> list:
+        """Return list of auto-discovered device IDs."""
+        return [
+            did
+            for did, info in self.devices.items()
+            if not info.get("added_manually", False)
+        ]
+
+    async def send(
+        self,
+        device_id: str,
+        command_type: Union[int, "commands"],
+        data: Optional[Any] = None,
+    ) -> Optional[dict]:
         """Send a JSON-formatted command to another device.
 
         Args:
@@ -239,35 +300,41 @@ class EasyHTTPAsync:
 
         if device_id not in self.devices:
             if self.debug:
-                print(f"\033[31mERROR\033[0m:\t Device {device_id} not found in devices cache")
+                log.error(f"Device {device_id} not found in devices cache")
             return None
-    
+
         packet = {
-            "version": __version__,
-            "type": command_type if isinstance(command_type, self.commands) else command_type,
+            "version": self.__version__,
+            "type": (
+                command_type
+                if isinstance(command_type, self.commands)
+                else command_type
+            ),
             "header": {
-                "sender_id": self.id, 
+                "sender_id": self.id,
                 "sender_port": self.port,
-                "recipient_id": device_id, 
-                "timestamp": int(time.time())
-            }
+                "recipient_id": device_id,
+                "timestamp": int(time.time()),
+            },
         }
-    
+
         if data:
-            packet['data'] = data
-    
+            packet["data"] = data
+
         recipient_url = f"http://{self.devices[device_id]['ip']}:{self.devices[device_id]['port']}/easyhttp/api"
-    
+
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(recipient_url, json=packet, timeout=3) as response:
+                async with session.post(
+                    recipient_url, json=packet, timeout=3
+                ) as response:
                     if response.status == 200:
                         return await response.json()
                     return None
-            
+
         except Exception as e:
             if self.debug:
-                print(f'\033[31mERROR\033[0m:\t Failed to send to {device_id}: {e}')
+                log.error(f"Failed to send to {device_id}: {e}")
             return None
 
     async def ping(self, device_id: str) -> bool:
@@ -281,26 +348,28 @@ class EasyHTTPAsync:
         """
 
         response = await self.send(device_id, self.commands.PING.value)
-    
-        if response and response.get('type') == self.commands.PONG.value:
+
+        if response and response.get("type") == self.commands.PONG.value:
             if self.debug:
-                print(f"\033[32mPING\033[0m:\t {device_id} is online")
+                log.custom("PING", Colors.GREEN, f"{device_id} is online")
             if device_id in self.devices:
-                self.devices[device_id]['last_seen'] = time.time()
+                self.devices[device_id]["last_seen"] = time.time()
             return True
         else:
             if self.debug:
-                print(f"\033[31mPING\033[0m:\t {device_id} is offline or not responding")
+                log.custom("PING", Colors.RED, f"{device_id} is offline or not responding")
             return False
 
-    async def fetch(self, device_id: str, query: Optional[Any] = None) -> Optional[dict]:
+    async def fetch(
+        self, device_id: str, query: Optional[Any] = None
+    ) -> Optional[dict]:
         """Send a FETCH request to another device and return the response.
 
         Args:
             device_id: ID of the target device.
             query: Query data to send with the FETCH request.
 
-        Returns: 
+        Returns:
             Response data from the device, or None if failed.
             The dict typically contains 'type', 'header', and 'data' fields.
         """
@@ -324,16 +393,16 @@ class EasyHTTPAsync:
 
         if data is not None and not isinstance(data, (dict, list, str)):
             raise TypeError("Data must be JSON-serializable (dict, list, str)")
-        
+
         response = await self.send(device_id, self.commands.PUSH, data)
 
-        if response and response.get('type') == self.commands.ACK.value:
+        if response and response.get("type") == self.commands.ACK.value:
             if self.debug:
-                print(f"\033[32mPUSH\033[0m:\t Successfully wrote to {device_id}")
+                log.custom("PUSH", Colors.GREEN, f"Successfully wrote to {device_id}")
             return True
         else:
             if self.debug:
-                print(f"\033[31mPUSH\033[0m:\t Error writing to {device_id}")
+                log.custom("PUSH", Colors.RED, f"Error writing to {device_id}")
             return False
 
     async def api_handler(self, request: Request) -> JSONResponse:
@@ -345,173 +414,176 @@ class EasyHTTPAsync:
         Returns:
             JSONResponse: Response to the client.
         """
-        
+
         try:
             data = await request.json()
         except:
             return JSONResponse({"error": "Invalid JSON data"}, status_code=400)
-            
+
         if not data:
             return JSONResponse({"error": "No JSON data"}, status_code=400)
-            
-        command_type = data.get('type')
-        header = data.get('header', {})
-        sender_id = header.get('sender_id')
-        
+
+        command_type = data.get("type")
+        header = data.get("header", {})
+        sender_id = header.get("sender_id")
+
         client_ip = request.client.host if request.client else "0.0.0.0"
 
         if sender_id and sender_id != self.id and sender_id not in self.devices:
             self.devices[sender_id] = {
-                'ip': client_ip,
-                'port': header.get('sender_port', self.port),
-                'last_seen': int(time.time())
+                "ip": client_ip,
+                "port": header.get("sender_port", self.port),
+                "last_seen": int(time.time()),
             }
 
         # Handle PING response
         if command_type == self.commands.PING.value:
-            if self.callbacks['on_ping']:
-                callback = self.callbacks['on_ping']
+            if self.callbacks["on_ping"]:
+                callback = self.callbacks["on_ping"]
                 if asyncio.iscoroutinefunction(callback):
                     await callback(
-                        sender_id=sender_id,
-                        timestamp=header.get('timestamp')
+                        sender_id=sender_id, timestamp=header.get("timestamp")
                     )
                 else:
-                    callback(
-                        sender_id=sender_id,
-                        timestamp=header.get('timestamp')
-                    )
-                
-            return JSONResponse({
-                "version": __version__,
-                "type": self.commands.PONG.value,
-                "header": {
-                    "sender_id": self.id,
-                    "sender_port": self.port,
-                    "recipient_id": sender_id,
-                    "timestamp": int(time.time())
+                    callback(sender_id=sender_id, timestamp=header.get("timestamp"))
+
+            return JSONResponse(
+                {
+                    "version": self.__version__,
+                    "type": self.commands.PONG.value,
+                    "header": {
+                        "sender_id": self.id,
+                        "sender_port": self.port,
+                        "recipient_id": sender_id,
+                        "timestamp": int(time.time()),
+                    },
                 }
-            })
+            )
 
         # Handle PONG answer
         elif command_type == self.commands.PONG.value:
-            if self.callbacks['on_pong']:
-                callback = self.callbacks['on_pong']
+            if self.callbacks["on_pong"]:
+                callback = self.callbacks["on_pong"]
                 if asyncio.iscoroutinefunction(callback):
                     await callback(
-                        sender_id=sender_id,
-                        timestamp=header.get('timestamp')
+                        sender_id=sender_id, timestamp=header.get("timestamp")
                     )
                 else:
-                    callback(
-                        sender_id=sender_id,
-                        timestamp=header.get('timestamp')
-                    )
+                    callback(sender_id=sender_id, timestamp=header.get("timestamp"))
 
             if self.debug:
-                print(f"\033[32mPONG\033[0m:\t Received from {sender_id}")
+                log.custom("PONG", Colors.GREEN, f"Received from {sender_id}")
             if sender_id in self.devices:
-                self.devices[sender_id]['last_seen'] = time.time()
+                self.devices[sender_id]["last_seen"] = time.time()
             return JSONResponse({"status": "pong_received"})
 
         # Handle FETCH response
         elif command_type == self.commands.FETCH.value:
-            if self.callbacks['on_fetch']:
-                callback = self.callbacks['on_fetch']
+            if self.callbacks["on_fetch"]:
+                callback = self.callbacks["on_fetch"]
                 if asyncio.iscoroutinefunction(callback):
-                    response_data = await callback (
+                    response_data = await callback(
                         sender_id=sender_id,
-                        query=data.get('data'),
-                        timestamp=header.get('timestamp')
+                        query=data.get("data"),
+                        timestamp=header.get("timestamp"),
                     )
                 else:
-                    response_data = callback (
+                    response_data = callback(
                         sender_id=sender_id,
-                        query=data.get('data'),
-                        timestamp=header.get('timestamp')
+                        query=data.get("data"),
+                        timestamp=header.get("timestamp"),
                     )
                 if response_data:
-                    return JSONResponse({
-                        "version": __version__,
-                        "type": self.commands.DATA.value,
-                        "header": {
-                            "sender_id": self.id,
-                            "sender_port": self.port,
-                            "recipient_id": sender_id,
-                            "timestamp": int(time.time())
-                        },
-                        "data": response_data
-                    })
+                    return JSONResponse(
+                        {
+                            "version": self.__version__,
+                            "type": self.commands.DATA.value,
+                            "header": {
+                                "sender_id": self.id,
+                                "sender_port": self.port,
+                                "recipient_id": sender_id,
+                                "timestamp": int(time.time()),
+                            },
+                            "data": response_data,
+                        }
+                    )
             return JSONResponse({"status": "fetch_handled"})
 
         # Handle PUSH response
         elif command_type == self.commands.PUSH.value:
-            if not self.callbacks['on_push']:
-                return JSONResponse({
-                    "version": __version__,
-                    "type": self.commands.NACK.value,
-                    "header": {
-                        "sender_id": self.id,
-                        "sender_port": self.port,
-                        "recipient_id": sender_id,
-                        "timestamp": int(time.time())
+            if not self.callbacks["on_push"]:
+                return JSONResponse(
+                    {
+                        "version": self.__version__,
+                        "type": self.commands.NACK.value,
+                        "header": {
+                            "sender_id": self.id,
+                            "sender_port": self.port,
+                            "recipient_id": sender_id,
+                            "timestamp": int(time.time()),
+                        },
                     },
-                }, status_code=400)
+                    status_code=400,
+                )
 
-            callback = self.callbacks['on_push']
+            callback = self.callbacks["on_push"]
             if asyncio.iscoroutinefunction(callback):
                 success = await callback(
                     sender_id=sender_id,
-                    data=data.get('data'),
-                    timestamp=header.get('timestamp')
+                    data=data.get("data"),
+                    timestamp=header.get("timestamp"),
                 )
             else:
                 success = callback(
                     sender_id=sender_id,
-                    data=data.get('data'),
-                    timestamp=header.get('timestamp')
+                    data=data.get("data"),
+                    timestamp=header.get("timestamp"),
                 )
-            
+
             if success:
-                return JSONResponse({
-                    "version": __version__,
-                    "type": self.commands.ACK.value,
-                    "header": {
-                        "sender_id": self.id,
-                        "sender_port": self.port,
-                        "recipient_id": sender_id,
-                        "timestamp": int(time.time())
+                return JSONResponse(
+                    {
+                        "version": self.__version__,
+                        "type": self.commands.ACK.value,
+                        "header": {
+                            "sender_id": self.id,
+                            "sender_port": self.port,
+                            "recipient_id": sender_id,
+                            "timestamp": int(time.time()),
+                        },
                     }
-                })
+                )
             else:
-                return JSONResponse({
-                    "version": __version__,
-                    "type": self.commands.NACK.value,
-                    "header": {
-                        "sender_id": self.id,
-                        "sender_port": self.port,
-                        "recipient_id": sender_id,
-                        "timestamp": int(time.time())
+                return JSONResponse(
+                    {
+                        "version": self.__version__,
+                        "type": self.commands.NACK.value,
+                        "header": {
+                            "sender_id": self.id,
+                            "sender_port": self.port,
+                            "recipient_id": sender_id,
+                            "timestamp": int(time.time()),
+                        },
                     }
-                })
+                )
 
         # Handle DATA
         elif command_type == self.commands.DATA.value:
-            if self.callbacks['on_data']:
-                callback = self.callbacks['on_data']
+            if self.callbacks["on_data"]:
+                callback = self.callbacks["on_data"]
                 if asyncio.iscoroutinefunction(callback):
                     await callback(
                         sender_id=sender_id,
-                        data=data.get('data'),
-                        timestamp=header.get('timestamp')
+                        data=data.get("data"),
+                        timestamp=header.get("timestamp"),
                     )
                 else:
                     callback(
                         sender_id=sender_id,
-                        data=data.get('data'),
-                        timestamp=header.get('timestamp')
+                        data=data.get("data"),
+                        timestamp=header.get("timestamp"),
                     )
             return JSONResponse({"status": "data_received"})
-        
+
         # Handle unknown command types
         return JSONResponse({"error": "Unknown command type"}, status_code=400)
