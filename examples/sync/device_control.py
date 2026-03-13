@@ -22,9 +22,6 @@ def handle_push(sender_id, data, timestamp):
 def main():
     # Initializing
     easy = EasyHTTP(debug=True, port=5000)
-
-    # Manually adding other device (Auto-discovery is in progress!)
-    easy.add("ABC123", "192.168.1.100", 5000)
     
     # Setting up callback functions
     easy.on("on_push", handle_push)

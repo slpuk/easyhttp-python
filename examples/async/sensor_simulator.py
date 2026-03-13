@@ -13,9 +13,6 @@ async def main():
     # Initializing
     easy = EasyHTTPAsync(debug=True, port=5000)
 
-    # Manually adding other device (Auto-discovery is in progress!)
-    easy.add("ABC123", "192.168.1.100", 5000)
-
     # Setting up callback function
     easy.on("on_fetch", handle_fetch)
 

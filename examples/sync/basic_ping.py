@@ -6,9 +6,6 @@ def main():
     # Async context manager whuch initializing EasyHTTP
     with EasyHTTP(debug=True, port=5000) as easy:
         try:
-            # Manually adding other device (Auto-discovery is in progress!)
-            easy.add("ABC123", "192.168.1.100", 5000)
-
             # Pinging device by ID once every 3 seconds
             while True:
                 # Bool: True if device is online(sended PONG command)

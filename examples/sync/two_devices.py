@@ -15,7 +15,6 @@ def handle_data(sender_id, data):
 def main():
     # Initializing
     easy = EasyHTTP(debug=True, port=5000)
-    easy.add("ABC123", "192.168.1.100", 5000)
 
     # Setting up callback functions
     easy.on("on_fetch", handle_fetch)

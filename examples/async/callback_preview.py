@@ -48,9 +48,6 @@ async def main():
         easy.on('on_data', handle_data)     # Handle DATA
         easy.on('on_push', handle_push)     # Handle PUSH
 
-        # Manually adding other device (Auto-discovery is in progress!)
-        easy.add("ABC123", "192.168.1.100", 5000)
-
         # Starting API
         await easy.start()
 
