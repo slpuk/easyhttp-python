@@ -1,9 +1,6 @@
 from .core import EasyHTTPAsync
 from .wrapper import EasyHTTP
 
-__version__ = "0.3.3"
+__version__ = EasyHTTPAsync.__version__
 __author__ = "slpuk"
-__all__ = [
-    "EasyHTTPAsync",
-    "EasyHTTP"
-]
+__all__ = ["EasyHTTPAsync", "EasyHTTP"]
