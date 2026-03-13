@@ -2,8 +2,8 @@
 [EN README](README.md) | [RU README](README_RU.md)
 > **A lightweight HTTP-based P2P framework for IoT and device-to-device communication**
 
-![Protocol Version](https://img.shields.io/badge/version-0.3.3-blue?style=for-the-badge)
-![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.4.0-blue?style=for-the-badge)
+![Development Status](https://img.shields.io/badge/status-alpha-red?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
@@ -15,7 +15,7 @@
 > # 0.3.2 (OLD)
 > from easyhttp import ...
 >
-> # 0.3.3 (NEW)
+> # 0.3.3 - newer (NEW)
 > from easyhttp_python import ...
 >```
 
@@ -41,9 +41,6 @@ def main():
     # Initialize a device with context manager
     with EasyHTTP(debug=True, port=5000) as easy:
         print(f"Device ID: {easy.id}")
-    
-        # Manually add another device
-        easy.add("ABC123", "192.168.1.100", 5000)
     
         # Ping to check if device is online
         if easy.ping("ABC123"):
@@ -77,9 +74,6 @@ async def main():
     
     print(f"Device ID: {easy.id}")
     
-    # Manually add another device
-    easy.add("ABC123", "192.168.1.100", 5000)
-    
     # Ping to check if device is online
     if await easy.ping("ABC123"):
         print("Device is online!")
@@ -111,6 +105,7 @@ if __name__ == "__main__":
 - **🆔 Human-Readable Device IDs** - Base32 identifiers instead of IP addresses
 - **✅ Easy to Use** - Simple API with minimal setup
 - **🚀 Performance** - Asynchronous code and lightweight libraries(FastAPI/aiohttp)
+- **⚙️ Auto-detect** - Devices automatically find each other
 
 ## Project Structure
 ```
@@ -120,8 +115,9 @@ easyhttp-python/
 │   └── EasyHTTPAsync.md # Async API reference
 ├── easyhttp_python/
 │   ├── __init__.py
-│   ├── core.py     # Main framework file/core
-│   └── wrapper.py  # Synchronous wrapper
+│   ├── core.py         # Main framework file/core
+│   ├── discovery.py    # Discovery module
+│   └── wrapper.py      # Synchronous wrapper
 ├── examples/
 │   ├── async/       # Asynchronous examples
 │   │   ├── basic_ping.py

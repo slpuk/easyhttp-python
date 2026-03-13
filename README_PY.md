@@ -1,15 +1,15 @@
 # EasyHTTP
 
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/slpuk/easyhttp-python)
-![Protocol Version](https://img.shields.io/badge/version-0.3.3-blue?style=for-the-badge)
-![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.4.0-blue?style=for-the-badge)
+![Development Status](https://img.shields.io/badge/status-alpha-red?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
 > **A lightweight HTTP-based P2P framework for IoT and device-to-device communication**
 
 ## 🛠️ Changelog
-- Added context managers support
+- Added UDP multicast discovery
 - Fixed some bugs
 
 ## 📖 About
@@ -23,7 +23,7 @@
 - **🆔 Human-Readable Device IDs** - Base32 identifiers instead of IP addresses
 - **✅ Easy to Use** - Simple API with minimal setup
 - **🚀 Performance** - Asynchronous code and lightweight libraries(FastAPI/aiohttp)
-
+- **⚙️ Auto-detect** - Devices automatically find each other
 
 ## 🏗️ Architecture
 
@@ -92,10 +92,6 @@ def main():
     easy.start()  # Starting server
     print(f"Device {easy.id} is running on port 5000!")
     
-    # Adding device
-    easy.add("ABC123", "192.168.1.100", 5000)
-    print("Added device ABC123")
-    
     # Monitoring device's status
     try:
         while True:
@@ -114,4 +110,12 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+## 📦 Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 0.4.0 | 2026-13-03 | UDP Discovery, auto-detect |
+| 0.3.3 | 2026-03-01 | Fixed imports, renamed to easyhttp_python |
+| 0.3.2 | 2026-02-14 | Context managers |
+
 **More examples available on [GitHub](https://github.com/slpuk/easyhttp-python)**

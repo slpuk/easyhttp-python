@@ -1,14 +1,15 @@
 ## 🔧 Asynchronous API Reference
 
-> Core Methods for **0.3.2**
+> Core Methods for **0.4.0-alpha.6**
 
-## `EasyHTTPAsync(debug=False, port=5000, config_file=None)`
+## `EasyHTTPAsync(debug=False, port=5000, config_file=None, enable_discovery=True)`
 Initialize a new asynchronous EasyHTTP device.
 
 **Parameters:**
 - `debug` (bool): Enable debug output (default: False)
 - `port` (int): HTTP server port (default: 5000)
 - `config_file` (str, optional): Custom config file path. If `None`, uses `easyhttp_device.json` in current directory (default: None)
+- `enable_discovery` (bool): Enable devices discovery (default: True)
 
 ## `start()`
 Start the HTTP server and generate device ID if not already set.
@@ -201,10 +202,11 @@ if not await easy.push("ABC123", {"command": "test"}):
 Framework supports context managers & full syntax, automatically starting/stopping the server.
 
 ```python
-from easyhttp import EasyHTTPAsync
+from easyhttp_python import EasyHTTPAsync
 
-async with EasyHTTPAsync(debug=True, port=5000) as easy:
-    easy.add("ABC123", "192.168.1.100", 5000)
+async with EasyHTTPAsync(debug=True, port=5000, enable_discovery=True) as easy:
+    # Autodiscovery is available now!
+    # easy.add("ABC123", "192.168.1.100", 5000)
     if await easy.ping("ABC123"):
         print("Device is online!")
 ```

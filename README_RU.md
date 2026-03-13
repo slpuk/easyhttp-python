@@ -2,8 +2,8 @@
 [EN README](README.md) | [RU README](README_RU.md)
 > **Легковесный фреймворк на базе HTTP для P2P-связи в IoT**
 
-![Protocol Version](https://img.shields.io/badge/version-0.3.3-blue?style=for-the-badge)
-![Development Status](https://img.shields.io/badge/status-beta-orange?style=for-the-badge)
+![Protocol Version](https://img.shields.io/badge/version-0.4.0-blue?style=for-the-badge)
+![Development Status](https://img.shields.io/badge/status-alpha-red?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.7+-blue?style=for-the-badge&logo=python&logoColor=white)
 
@@ -42,9 +42,6 @@ def main():
     with EasyHTTP(debug=True, port=5000) as easy:
         print(f"Мой ID: {easy.id}")
     
-        # Вручную добавляем удаленное устройство
-        easy.add("ABC123", "192.168.1.100", 5000)
-    
         # Пингуем для проверки состояния устройства
         if easy.ping("ABC123"):
             print("Устройство в сети!")
@@ -77,9 +74,6 @@ async def main():
     
     print(f"Мой ID: {easy.id}")
     
-    # Вручную добавляем удаленное устройство
-    easy.add("ABC123", "192.168.1.100", 5000)
-    
     # Пингуем для проверки состояния устройства
     if await easy.ping("ABC123"):
         print("Устройство в сети!")
@@ -111,6 +105,7 @@ if __name__ == "__main__":
 - **🆔 Человеко-читаемые ID** - 6-символьные Base32 ID (например `7H8G2K`), хранятся в `easyhttp_device.json`
 - **✅ Простота в использовании** - Минимальная настройка API
 - **🚀 Производительность** - Асинхронный код и лёгкие библиотеки (FastAPI/aiohttp)
+- **⚙️ Автообнаружение** - Устройства автоматически находят друг друга
 
 ## Структура Проекта
 ```
@@ -120,8 +115,9 @@ easyhttp-python/
 │   └── EasyHTTPAsync.md # Документация асинхронного API
 ├── easyhttp_python/
 │   ├── __init__.py
-│   ├── core.py     # Основной код фреймворка
-│   └── wrapper.py  # Синхронная оболочка
+│   ├── core.py         # Основной код фреймворка
+│   ├── discovery.py    # Модуль автообнаружения
+│   └── wrapper.py      # Синхронная оболочка
 ├── examples/
 │   ├── async/       # Примеры с асинхронным кодом
 │   │   ├── basic_ping.py
@@ -236,10 +232,6 @@ def main():
     
     easy.start()  # Запускаем сервер
     print(f"Устройство {easy.id} запущено на порту 5000!")
-    
-    # Вручную добавляем устройство
-    easy.add("ABC123", "192.168.1.100", 5000)
-    print("Устройство ABC123 добавлено")
     
     # Мониторим статус устройства
     try:
